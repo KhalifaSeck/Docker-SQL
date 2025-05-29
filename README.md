@@ -129,18 +129,18 @@ Rôles requis dans GCP :
 ```bash
 Fullstack-Data-Engineering-Project-using-Docker-PostgreSQL-Terraform/
 ├── data/
-│   └── green_tripdata_2019.csv
+│   └── green_tripdata_2019-10.csv
 │   └── taxi_zone_lookup.csv
-├── keys/
-│   └── my-creds.json
 ├── terraform/
+│   ├── keys/
+│   │   └── my-creds.json
 │   ├── main.tf
 │   ├── variables.tf
 │   ├── outputs.tf
 │   ├── .gitignore
 ├── docker-compose.yaml
 ├── notebooks/
-│   └── analyse_taxi.ipynb
+│   └── data-load.ipynb
 └── README.md
 ```
 
