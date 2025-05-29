@@ -1,122 +1,187 @@
-
 # 🚀 Docker-SQL-Terraform-GCP Project
 
 Bienvenue dans ce projet d'apprentissage autour de **Docker**, **PostgreSQL**, **pgAdmin**, **SQL** et **Terraform** sur **Google Cloud Platform (GCP)**. L’objectif est de manipuler un environnement conteneurisé, charger des données réelles de taxi à New York, les analyser à l’aide de requêtes SQL, puis automatiser le déploiement de l'infrastructure dans le cloud.
 
 ---
 
-## 🧩 Sommaire
+## 🤩 Sommaire
 
-- [1. Exécution de base avec Docker](#1-exécution-de-base-avec-docker)
-- [2. Configuration PostgreSQL + pgAdmin avec Docker Compose](#2-configuration-postgresql--pgadmin-avec-docker-compose)
-- [3. Importation des données de trajets](#3-importation-des-données-de-trajets)
-- [4. Analyse SQL des données](#4-analyse-sql-des-données)
-- [5. Déploiement avec Terraform sur GCP (à venir)](#5-déploiement-avec-terraform-sur-gcp-à-venir)
-- [📁 Arborescence du projet](#-arborescence-du-projet)
-- [📌 Prérequis](#-prérequis)
-
----
-
-# Détails du Projet Docker-SQL-Terraform-GCP
+* [1. Exécution de base avec Docker](#1-exécution-de-base-avec-docker)
+* [2. Configuration PostgreSQL + pgAdmin avec Docker Compose](#2-configuration-postgresql--pgadmin-avec-docker-compose)
+* [3. Importation des données de trajets](#3-importation-des-données-de-trajets)
+* [4. Analyse SQL des données](#4-analyse-sql-des-données)
+* [5. Déploiement avec Terraform sur GCP](#5-déploiement-avec-terraform-sur-gcp)
+* [6. Configuration IAM pour le compte Terraform](#6-configuration-iam-pour-le-compte-terraform)
+* [7. Arborescence du projet](#7-arborescence-du-projet)
+* [8. Fichier .gitignore](#8-fichier-gitignore)
 
 ---
 
-## Exécution de base avec Docker
+## 1. Exécution de base avec Docker
 
-### Commande :
 ```bash
 docker run -it python:3.12.8 bash
 ```
 
-### Détails :
-- **docker run** : crée et démarre un nouveau conteneur.
-- **-it** : rend le conteneur interactif avec un terminal (-i pour input, -t pour terminal).
-- **python:3.12.8** : image officielle Docker contenant Python 3.12.8.
-- **bash** : ouvre un shell Bash dans le conteneur.
-
-### Objectif :
-Tester rapidement des scripts Python dans un environnement isolé, sans affecter la machine hôte.
+* **-it** : terminal interactif
+* **python:3.12.8** : image officielle Python
+* **bash** : ouvre un shell dans le conteneur
 
 ---
 
-## Configuration PostgreSQL + pgAdmin avec Docker Compose
+## 2. Configuration PostgreSQL + pgAdmin avec Docker Compose
 
-### Services définis dans `docker-compose.yaml` :
+### PostgreSQL
 
-#### PostgreSQL
-- **Image** : `postgres:17-alpine`
-- **Variables d’environnement** :
-  - `POSTGRES_USER=postgres`
-  - `POSTGRES_PASSWORD=postgres`
-  - `POSTGRES_DB=ny_taxi`
-- **Port** : `5433` (hôte) → `5432` (conteneur)
+* Image : `postgres:17-alpine`
+* Ports : `5433:5432`
 
-#### pgAdmin
-- **Interface web** : [http://localhost:8080](http://localhost:8080)
-- **Identifiants de connexion** :
-  - **Email** : `pgadmin@pgadmin.com`
-  - **Mot de passe** : `pgadmin`
+### pgAdmin
 
-### 🔌 Connexion à PostgreSQL via pgAdmin :
-- **Nom du serveur** : libre (ex. `PostgreSQL Local`)
-- **Host** : `db`
-- **Port** : `5432`
-- **Utilisateur** : `postgres`
-- **Mot de passe** : `postgres`
-
-### Volumes persistants :
-- `vol-pgdata` : stocke les données PostgreSQL
-- `vol-pgadmin_data` : conserve la configuration de pgAdmin
+* Interface : [http://localhost:8080](http://localhost:8080)
+* Email : `pgadmin@pgadmin.com`
+* Mot de passe : `pgadmin`
 
 ---
 
-## Importation des données de trajets
+## 3. Importation des données de trajets
 
-### Étape 1 : Télécharger les fichiers CSV
 ```bash
 wget https://github.com/DataTalksClub/nyc-tlc-data/releases/download/green/green_tripdata_2019-10.csv.gz
 wget https://github.com/DataTalksClub/nyc-tlc-data/releases/download/misc/taxi_zone_lookup.csv
 gunzip green_tripdata_2019-10.csv.gz
 ```
 
-### Étape 2 : Charger les données dans PostgreSQL
-L’import se fait à l’aide d’un **notebook Jupyter** situé dans le dossier `notebooks/`, en utilisant **pandas** et **sqlalchemy**.
+Chargement des données via `pandas` dans un notebook Python.
 
 ---
 
-## Analyse SQL des données
+## 4. Analyse SQL des données
 
-### Question 3 : Nombre de trajets selon la distance (octobre 2019)
-- Jusqu’à 1 mile : **104 793**
-- Entre 1 et 3 miles : **202 661**
-- Entre 3 et 7 miles : **109 603**
-- Entre 7 et 10 miles : **27 678**
-- Plus de 10 miles : **35 189**
+Exemples :
 
-*Requête SQL disponible dans le notebook Jupyter.*
+* Nombre de trajets par tranche de distance
+* Trajet le plus long par jour
+* Zones de ramassage principales
 
 ---
 
-### Question 4 : Trajet le plus long par jour
-- **11/10/2019**
-- **24/10/2019**
-- **26/10/2019**
-- **31/10/2019**
+## 5. Déploiement avec Terraform sur GCP
 
-*Voir les résultats complets dans le notebook.*
+### ⚙️ Installation de Terraform (Linux/WSL)
+
+```bash
+sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install terraform
+```
+
+### 🔑 Authentification avec Google Cloud
+
+Avant d'exécuter Terraform, exporte ta clé d'identification :
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="./keys/my-creds.json"
+```
+
+Cela permet à Terraform de s'authentifier auprès de Google Cloud.
+
+### 🔧 Infrastructure déployée
+
+* Bucket GCS : stockage des CSV
+* Dataset BigQuery : `demo_dataset`
+* Tables BigQuery : `green_tripdata_2019`, `taxi_zone_lookup`
+* VM Ubuntu : déployée dans `northamerica-northeast1-a`
+
+### ⚡ Commandes Terraform
+
+```bash
+cd terraform
+terraform init
+terraform plan
+terraform apply
+```
 
 ---
 
-### Question 5 : Zones de ramassage principales le 18/10/2019
-- **East Harlem North**
-- **Morningside Heights**
-- **Astoria Park**
+## 6. Configuration IAM pour le compte Terraform
 
-*Filtrage basé sur la colonne `lpep_pickup_datetime`.*
+Compte de service :
+
+```
+terraform-runner@terraform-project-461319.iam.gserviceaccount.com
+```
+
+Rôles requis dans GCP :
+
+| Rôle                             | ID du rôle                     |
+| -------------------------------- | ------------------------------ |
+| Administrateur BigQuery          | `roles/bigquery.admin`         |
+| Administrateur de Compute        | `roles/compute.admin`          |
+| Administrateur Storage           | `roles/storage.admin`          |
+| Utilisateur de compte de service | `roles/iam.serviceAccountUser` |
 
 ---
 
-## Déploiement avec Terraform sur GCP (à venir)
+## 7. Arborescence du projet
 
-Cette section consistera à automatiser le déploiement de l’architecture PostgreSQL + pgAdmin sur **Google Cloud Platform** à l’aide de **Terraform**, pour explorer les concepts d’Infrastructure as Code (**IaC**) dans un environnement cloud.
+```bash
+Fullstack-Data-Engineering-Project-using-Docker-PostgreSQL-Terraform/
+├── data/
+│   └── green_tripdata_2019.csv
+│   └── taxi_zone_lookup.csv
+├── keys/
+│   └── my-creds.json
+├── terraform/
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── .gitignore
+├── docker-compose.yaml
+├── notebooks/
+│   └── analyse_taxi.ipynb
+└── README.md
+```
 
+---
+
+## 8. Fichier .gitignore
+
+Fichier `.gitignore` à placer dans le dossier `terraform/` :
+
+```gitignore
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+
+# Variables sensibles
+*.tfvars
+*.tfvars.json
+
+# Fichiers overrides locaux
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Fichiers de config CLI
+.terraformrc
+terraform.rc
+
+# Clés GCP
+keys/*.json
+
+# OS et IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+```
+
+---
+
+> ⚠️ **Attention :** ne jamais versionner les fichiers de clés `*.json` ni les fichiers `.tfstate` dans GitHub !

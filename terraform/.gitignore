@@ -1,0 +1,36 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Variables sensibles
+*.tfvars
+*.tfvars.json
+
+# Fichiers d'override locaux
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Plans Terraform
+*.tfplan
+
+# Fichiers de configuration CLI
+.terraformrc
+terraform.rc
+
+# Clés GCP
+keys/*.json
+
+# Éditeurs et OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
